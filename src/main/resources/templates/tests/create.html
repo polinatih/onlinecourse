@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><title>Создать тест</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>body{background:#f8f9fa;} .pattern-info{background:#f0f4ff;border-left:4px solid #6f42c1;border-radius:0 8px 8px 0;padding:12px 16px;}</style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">CoursePlatform</a>
+        <a class="nav-link text-white" th:href="@{/courses/{id}(id=${course.id})}">← Назад</a>
+    </div>
+</nav>
+<div class="container" style="max-width:640px;">
+    <h2 class="fw-bold mb-1">Создать тест</h2>
+    <p class="text-muted mb-3">Курс: <strong th:text="${course.title}"></strong></p>
+    <div class="pattern-info mb-4 small">
+        <strong>🔨 Builder</strong> — тест собирается пошагово.<br/>
+        <strong>🏗️ Abstract Factory</strong> — вопросы создаются фабрикой нужного уровня.<br/>
+        <strong>📋 Prototype</strong> — вопросы регистрируются для клонирования.
+    </div>
+    <div class="card p-4" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+        <form action="/tests/create" method="post">
+            <input type="hidden" name="courseId" th:value="${course.id}"/>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Название теста</label>
+                <input type="text" name="title" class="form-control" required placeholder="Итоговый тест"/>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Лимит времени (мин.)</label>
+                    <input type="number" name="timeLimitMinutes" class="form-control" value="30" min="5" required/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Проходной балл</label>
+                    <input type="number" name="passingScore" class="form-control" value="60" min="1" required/>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Тип вопросов</label>
+                <select name="factoryType" class="form-select" required>
+                    <option value="beginnerQuestionFactory">🟢 Начальный уровень (1-2 балла)</option>
+                    <option value="advancedQuestionFactory">🔴 Продвинутый уровень (4-5 баллов)</option>
+                </select>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">Создать тест</button>
+                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

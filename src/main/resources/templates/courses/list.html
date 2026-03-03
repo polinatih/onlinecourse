@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><title>Курсы</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body{background:#f8f9fa;}
+        .card{border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;transition:transform .2s;}
+        .card:hover{transform:translateY(-4px);}
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-mortarboard-fill me-2"></i>CoursePlatform</a>
+        <div class="d-flex gap-3">
+            <a class="nav-link text-white" href="/courses">Курсы</a>
+            <a class="nav-link text-white" href="/courses/create">+ Создать</a>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0"><i class="bi bi-collection me-2 text-primary"></i>Все курсы</h2>
+        <a href="/courses/create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Создать</a>
+    </div>
+    <div th:if="${#lists.isEmpty(courses)}" class="text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size:4rem;"></i>
+        <p class="text-muted mt-3 fs-5">Курсов ещё нет. Создайте первый!</p>
+        <a href="/courses/create" class="btn btn-primary mt-2">Создать курс</a>
+    </div>
+    <div class="row g-4" th:unless="${#lists.isEmpty(courses)}">
+        <div class="col-md-6 col-lg-4" th:each="course : ${courses}">
+            <div class="card h-100 p-3">
+                <div class="card-body">
+                    <span class="badge mb-2"
+                          th:text="${course.getCourseType()}"
+                          th:classappend="${course.getCourseType() == 'Видеокурс'} ? 'bg-primary'
+                                        : (${course.getCourseType() == 'Текстовый курс'} ? 'bg-success' : 'bg-warning text-dark')">
+                    </span>
+                    <h5 class="fw-bold" th:text="${course.title}"></h5>
+                    <p class="text-muted small" th:text="${course.description}"></p>
+                    <div class="small mt-2">
+                        <div><i class="bi bi-person me-1 text-muted"></i><span th:text="${course.author}"></span></div>
+                        <div><i class="bi bi-bar-chart me-1 text-muted"></i><span th:text="${course.difficultyLevel}"></span></div>
+                        <div><i class="bi bi-clock me-1 text-muted"></i><span th:text="${course.durationHours} + ' ч.'"></span></div>
+                    </div>
+                    <p class="text-muted small mt-2 fst-italic" th:text="${course.getContentDescription()}"></p>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex gap-2">
+                    <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-primary btn-sm flex-fill">
+                        <i class="bi bi-eye me-1"></i>Открыть
+                    </a>
+                    <form th:action="@{/courses/{id}/delete(id=${course.id})}" method="post" class="flex-fill">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                                onclick="return confirm('Удалить?')">
+                            <i class="bi bi-trash me-1"></i>Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><title th:text="${course.title}">Курс</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>body{background:#f8f9fa;}</style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-mortarboard-fill me-2"></i>CoursePlatform</a>
+        <a class="nav-link text-white" href="/courses">← Все курсы</a>
+    </div>
+</nav>
+<div class="container">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card p-4 mb-4" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+                <div class="d-flex gap-2 mb-2">
+                    <span class="badge bg-primary" th:text="${course.getCourseType()}"></span>
+                    <span class="badge bg-secondary" th:text="${course.difficultyLevel}"></span>
+                    <span class="badge" style="background:#6f42c1;font-size:.7rem;">Factory Method</span>
+                </div>
+                <h2 class="fw-bold" th:text="${course.title}"></h2>
+                <p class="text-muted" th:text="${course.description}"></p>
+                <div class="row g-3 mt-2">
+                    <div class="col-sm-6">
+                        <div class="bg-light rounded p-3">
+                            <div class="small text-muted">Автор</div>
+                            <div class="fw-semibold" th:text="${course.author}"></div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="bg-light rounded p-3">
+                            <div class="small text-muted">Длительность</div>
+                            <div class="fw-semibold" th:text="${course.durationHours} + ' ч.'"></div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="bg-light rounded p-3">
+                            <div class="small text-muted">Содержание</div>
+                            <div class="fw-semibold" th:text="${course.getContentDescription()}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Тесты -->
+            <div class="card p-4" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-clipboard-check me-2 text-primary"></i>Тесты
+                        <span class="badge ms-1" style="background:#6f42c1;font-size:.65rem;">Builder + AbstractFactory</span>
+                    </h5>
+                    <a th:href="@{/tests/create(courseId=${course.id})}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus me-1"></i>Создать тест
+                    </a>
+                </div>
+                <div th:if="${#lists.isEmpty(course.tests)}" class="text-center text-muted py-3">
+                    <i class="bi bi-clipboard" style="font-size:2rem;"></i>
+                    <p class="mt-2">Тестов ещё нет</p>
+                </div>
+                <div th:each="test : ${course.tests}" class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-bold mb-1" th:text="${test.title}"></h6>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i><span th:text="${test.timeLimitMinutes} + ' мин.'"></span>
+                                &nbsp;·&nbsp; Балл: <span th:text="${test.passingScore}"></span>
+                                &nbsp;·&nbsp; Вопросов: <span th:text="${#lists.size(test.questions)}"></span>
+                            </small>
+                        </div>
+                        <a th:href="@{/tests/{id}(id=${test.id})}" class="btn btn-outline-primary btn-sm">Открыть</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-3 text-center" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+                <div class="display-6 text-primary fw-bold" th:text="${#lists.size(course.tests)}">0</div>
+                <div class="text-muted small">Тестов</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
