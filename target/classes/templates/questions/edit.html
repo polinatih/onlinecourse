@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><title>Редактировать вопрос</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>body{background:#f8f9fa;}</style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">CoursePlatform</a>
+        <a class="nav-link text-white" th:href="@{/tests/{id}(id=${testId})}">← Назад к тесту</a>
+    </div>
+</nav>
+<div class="container" style="max-width:640px;">
+    <h2 class="fw-bold mb-4">✏️ Редактировать вопрос</h2>
+    <div class="card p-4" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+        <form th:action="@{/questions/{id}/edit(id=${question.id})}" method="post">
+            <input type="hidden" name="testId" th:value="${testId}"/>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Тип вопроса</label>
+                <select name="questionType" class="form-select" required>
+                    <option th:each="t : ${questionTypes}"
+                            th:value="${t}" th:text="${t}"
+                            th:selected="${t == question.questionType}"></option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Текст вопроса</label>
+                <textarea name="text" class="form-control" rows="3"
+                          th:text="${question.text}" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Варианты ответа
+                    <small class="text-muted">(через точку с запятой)</small>
+                </label>
+                <input type="text" name="answerOptions" class="form-control"
+                       th:value="${question.answerOptions}"/>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Правильный ответ</label>
+                <input type="text" name="correctAnswer" class="form-control"
+                       th:value="${question.correctAnswer}" required/>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Баллы</label>
+                    <input type="number" name="points" class="form-control"
+                           th:value="${question.points}" min="1" max="10" required/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Сложность (1-5)</label>
+                    <input type="number" name="difficultyScore" class="form-control"
+                           th:value="${question.difficultyScore}" min="1" max="5" required/>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    💾 Сохранить
+                </button>
+                <a th:href="@{/tests/{id}(id=${testId})}"
+                   class="btn btn-outline-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
