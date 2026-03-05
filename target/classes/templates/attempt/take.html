@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><title th:text="${test.title}">Тест</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        body{background:#f8f9fa;}
+        .question-card{border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;}
+        .timer{font-size:1.5rem;font-weight:bold;color:#dc3545;}
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">CoursePlatform</a>
+        <span class="text-white" th:if="${test.timeLimitMinutes != null}">
+            ⏱️ <span id="timer" class="timer"></span>
+        </span>
+    </div>
+</nav>
+<div class="container" style="max-width:760px;">
+    <div class="mb-4">
+        <h2 class="fw-bold" th:text="${test.title}"></h2>
+        <div class="text-muted small">
+            <span>Вопросов: <strong th:text="${#lists.size(test.questions)}"></strong></span>
+            &nbsp;·&nbsp;
+            <span>Проходной балл: <strong th:text="${test.passingScore}"></strong>%</span>
+            <span th:if="${test.timeLimitMinutes != null}">
+                &nbsp;·&nbsp; Время: <strong th:text="${test.timeLimitMinutes}"></strong> мин.
+            </span>
+        </div>
+    </div>
+
+    <form th:action="@{/attempt/{id}/submit(id=${test.id})}" method="post">
+        <div th:each="q, stat : ${test.questions}" class="card question-card p-4 mb-3">
+            <div class="d-flex gap-2 mb-2">
+                <span class="badge bg-primary" th:text="'Вопрос ' + (${stat.index} + 1)"></span>
+                <span class="badge bg-warning text-dark" th:text="${q.points} + ' б.'"></span>
+                <span class="badge bg-secondary" th:text="${q.questionType}"></span>
+            </div>
+            <p class="fw-semibold mb-3" th:text="${q.text}"></p>
+
+            <!-- MULTIPLE_CHOICE -->
+<div th:if="${q.questionType.name() == 'MULTIPLE_CHOICE'}">
+    <div th:each="option, optStat : ${q.answerOptions.split(';')}" class="form-check mb-2">
+        <input class="form-check-input" type="radio"
+               th:name="'answer_' + ${q.id}"
+               th:value="${#strings.trim(option)}"
+               th:id="${'opt_' + q.id + '_' + optStat.index}"/>
+        <label class="form-check-label"
+               th:for="${'opt_' + q.id + '_' + optStat.index}"
+               th:text="${#strings.trim(option)}"></label>
+    </div>
+</div>
+
+            <!-- TRUE_FALSE -->
+            <div th:if="${q.questionType.name() == 'TRUE_FALSE'}">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio"
+                           th:name="'answer_' + ${q.id}" value="true"/>
+                    <label class="form-check-label">✅ Правда</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio"
+                           th:name="'answer_' + ${q.id}" value="false"/>
+                    <label class="form-check-label">❌ Ложь</label>
+                </div>
+            </div>
+
+            <!-- OPEN_TEXT -->
+            <div th:if="${q.questionType.name() == 'OPEN_TEXT'}">
+                <textarea class="form-control" rows="3"
+                          th:name="'answer_' + ${q.id}"
+                          placeholder="Введите ваш ответ..."></textarea>
+            </div>
+        </div>
+
+        <div class="d-grid mt-4 mb-5">
+            <button type="submit" class="btn btn-primary btn-lg"
+                    onclick="return confirm('Завершить тест и отправить ответы?')">
+                📤 Завершить тест
+            </button>
+        </div>
+    </form>
+</div>
+
+<script th:if="${test.timeLimitMinutes != null}"
+        th:inline="javascript">
+    let seconds = /*[[${test.timeLimitMinutes}]]*/ 30 * 60;
+    const timer = document.getElementById('timer');
+    const interval = setInterval(() => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        timer.textContent = m + ':' + String(s).padStart(2, '0');
+        if (seconds <= 60) timer.style.color = '#dc3545';
+        if (seconds <= 0) {
+            clearInterval(interval);
+            document.querySelector('form').submit();
+        }
+        seconds--;
+    }, 1000);
+</script>
+</body>
+</html>

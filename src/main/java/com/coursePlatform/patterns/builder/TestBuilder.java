@@ -8,23 +8,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ═══════════════════════════════════════════════════════════
- * ПАТТЕРН: BUILDER
- * ═══════════════════════════════════════════════════════════
- * Пошагово конструирует объект Test с множеством параметров.
- * Fluent API: testBuilder.title("...").withTimeLimit(30).build()
- * SOLID SRP: отвечает только за конструирование Test.
- *
- * Пример:
- *   Test test = testBuilder
- *       .title("Тест по Java")
- *       .forCourse(course)
- *       .withTimeLimit(30)
- *       .withPassingScore(70)
- *       .addQuestion(q1)
- *       .build();
- */
 @Component
 public class TestBuilder {
 

@@ -18,6 +18,10 @@
         <div class="col-lg-8">
             <div class="card p-4 mb-4" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
                 <h3 class="fw-bold" th:text="${test.title}"></h3>
+<a th:href="@{/attempt/{id}(id=${test.id})}"
+   class="btn btn-success mt-3">
+    Пройти тест
+</a>
                 <div class="d-flex gap-3 mt-2 text-muted small">
                     <span><i class="bi bi-clock me-1"></i><span th:text="${test.timeLimitMinutes}"></span> мин.</span>
                     <span><i class="bi bi-check2-circle me-1"></i>Балл: <span th:text="${test.passingScore}"></span></span>

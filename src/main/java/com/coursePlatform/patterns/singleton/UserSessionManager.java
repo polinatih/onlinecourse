@@ -7,14 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * ═══════════════════════════════════════════════════════════
- * ПАТТЕРН: SINGLETON
- * ═══════════════════════════════════════════════════════════
- * Единственный экземпляр менеджера сессий.
- * Реализован через double-checked locking (thread-safe).
- * SOLID SRP: класс отвечает только за управление сессиями.
- */
+
 @Component
 public class UserSessionManager {
 

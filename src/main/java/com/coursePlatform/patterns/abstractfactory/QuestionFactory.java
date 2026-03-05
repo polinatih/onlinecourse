@@ -4,21 +4,12 @@ import com.coursePlatform.model.question.Question;
 import com.coursePlatform.model.question.QuestionType;
 import org.springframework.stereotype.Component;
 
-/**
- * ═══════════════════════════════════════════════════════════
- * ПАТТЕРН: ABSTRACT FACTORY
- * ═══════════════════════════════════════════════════════════
- * Создаёт семейства связанных объектов — вопросы разных типов
- * с одинаковым уровнем сложности.
- * SOLID DIP: сервисы зависят от интерфейса QuestionFactory.
- */
 public interface QuestionFactory {
     Question createMultipleChoiceQuestion(String text, String options, String correctAnswer);
     Question createOpenTextQuestion(String text, String correctAnswer);
     Question createTrueFalseQuestion(String text, boolean correctAnswer);
 }
 
-// ─── Конкретная фабрика #1 — Вопросы начального уровня ───────
 @Component("beginnerQuestionFactory")
 class BeginnerQuestionFactory implements QuestionFactory {
 
@@ -38,7 +29,6 @@ class BeginnerQuestionFactory implements QuestionFactory {
     }
 }
 
-// ─── Конкретная фабрика #2 — Вопросы продвинутого уровня ─────
 @Component("advancedQuestionFactory")
 class AdvancedQuestionFactory implements QuestionFactory {
 

@@ -7,13 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * ═══════════════════════════════════════════════════════════
- * ПАТТЕРН: PROTOTYPE
- * ═══════════════════════════════════════════════════════════
- * Реестр прототипов вопросов. clone() создаёт независимую копию.
- * SOLID SRP: отвечает только за хранение и клонирование прототипов.
- */
+
 @Component
 public class QuestionPrototypeRegistry {
 

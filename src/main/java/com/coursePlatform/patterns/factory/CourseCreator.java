@@ -3,14 +3,7 @@ package com.coursePlatform.patterns.factory;
 import com.coursePlatform.model.course.*;
 import org.springframework.stereotype.Component;
 
-/**
- * ═══════════════════════════════════════════════════════════
- * ПАТТЕРН: FACTORY METHOD
- * ═══════════════════════════════════════════════════════════
- * Абстрактный создатель объявляет фабричный метод.
- * Конкретные создатели переопределяют его для каждого типа курса.
- * SOLID DIP: контроллер зависит от абстракции, не от реализации.
- */
+
 public abstract class CourseCreator {
 
     public abstract Course createCourse(String title, String description, String author,
@@ -27,7 +20,6 @@ public abstract class CourseCreator {
     }
 }
 
-// ─── Конкретный создатель #1 — Видеокурс ─────────────────────
 @Component("videoCourseCreator")
 class VideoCourseCreator extends CourseCreator {
     @Override
@@ -39,7 +31,6 @@ class VideoCourseCreator extends CourseCreator {
     }
 }
 
-// ─── Конкретный создатель #2 — Текстовый курс ────────────────
 @Component("textCourseCreator")
 class TextCourseCreator extends CourseCreator {
     @Override
@@ -51,7 +42,6 @@ class TextCourseCreator extends CourseCreator {
     }
 }
 
-// ─── Конкретный создатель #3 — Интерактивный курс ────────────
 @Component("interactiveCourseCreator")
 class InteractiveCourseCreator extends CourseCreator {
     @Override
