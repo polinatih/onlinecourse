@@ -80,6 +80,38 @@
                 <div class="display-6 text-primary fw-bold" th:text="${#lists.size(course.tests)}">0</div>
                 <div class="text-muted small">Тестов</div>
             </div>
+            <!-- FACADE: Записаться на курс -->
+            <div class="card p-3 mt-3" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+    <div class="text-center mb-2">
+        <span class="badge bg-success">🏛 Facade — Запись на курс</span>
+    </div>
+
+    <!-- Если залогинен — кнопка записи -->
+    <div th:if="${currentUserId != null}">
+        <form method="post" action="/enroll">
+            <input type="hidden" name="courseId" th:value="${course.id}"/>
+            <input type="hidden" name="userId"   th:value="${currentUserId}"/>
+            <button type="submit" class="btn btn-success w-100">
+                <i class="bi bi-journal-plus me-1"></i>Записаться на курс
+            </button>
+        </form>
+        <div class="text-center mt-2">
+            <a th:href="@{/profile/{id}(id=${currentUserId})}" class="small text-muted">
+                Перейти в профиль →
+            </a>
+        </div>
+    </div>
+
+    <!-- Если не залогинен — предложить войти -->
+    <div th:unless="${currentUserId != null}">
+        <p class="small text-muted text-center mb-2">
+            Войдите чтобы записаться на курс
+        </p>
+        <a href="/login" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Войти
+        </a>
+    </div>
+</div>
         </div>
     </div>
 </div>

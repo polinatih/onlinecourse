@@ -3,6 +3,9 @@ package com.coursePlatform.controller;
 import com.coursePlatform.model.course.Course;
 import com.coursePlatform.model.course.DifficultyLevel;
 import com.coursePlatform.service.CourseService;
+
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -58,12 +61,15 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public String courseDetail(@PathVariable Long id, Model model) {
-        Course course = courseService.getCourseById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Курс не найден"));
-        model.addAttribute("course", course);
-        return "courses/detail";
-    }
+public String courseDetail(@PathVariable Long id, 
+                           HttpSession httpSession,
+                           Model model) {
+    Course course = courseService.getCourseById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Курс не найден"));
+    model.addAttribute("course", course);
+    model.addAttribute("currentUserId", httpSession.getAttribute("userId"));
+    return "courses/detail";
+}
 
     @PostMapping("/{id}/delete")
     public String deleteCourse(@PathVariable Long id) {

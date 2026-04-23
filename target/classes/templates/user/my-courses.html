@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Мои курсы — CoursePlatform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { background:#f4f6fb; }
+        .card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+        .pattern-tag { background:#f0f4ff; color:#3b5bdb; border-radius:20px;
+            padding:3px 12px; font-size:.75rem; font-weight:600; }
+        .proxy-info { background:#fff3cd; border:1px solid #ffd54f; border-radius:10px; padding:12px 16px; font-size:.85rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-mortarboard-fill me-2"></i>CoursePlatform</a>
+        <div class="d-flex gap-2">
+            <a href="/courses" class="btn btn-outline-light btn-sm">Все курсы</a>
+            <a th:href="@{/profile/{id}(id=${user.id})}" class="btn btn-outline-light btn-sm">Профиль</a>
+            <a href="/logout" class="btn btn-light btn-sm">Выйти</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">
+                <i class="bi bi-shield-check me-2 text-warning"></i>Мои курсы
+            </h3>
+            <p class="text-muted small mb-0" th:text="'@' + ${user.username} + ' · ' + ${user.role}"></p>
+        </div>
+        <span class="pattern-tag">🛡 Proxy</span>
+    </div>
+
+    <!-- Объяснение Proxy -->
+    <div class="proxy-info mb-4">
+        <strong>CourseAccessProxy</strong> — Protection Proxy + Logging Proxy.<br/>
+        Студент (<code>STUDENT</code>) видит только курсы, на которые записан.<br/>
+        Преподаватель (<code>INSTRUCTOR</code>) и администратор видят все курсы.
+        <div class="mt-1">
+            <strong>Ваша роль:</strong>
+            <span th:text="${user.role}" class="fw-bold"></span> →
+            <span th:if="${user.role.name() == 'STUDENT'}" class="text-danger">
+                видите только свои <strong th:text="${courses.size()}"></strong> курс(ов)
+            </span>
+            <span th:unless="${user.role.name() == 'STUDENT'}" class="text-success">
+                видите все <strong th:text="${courses.size()}"></strong> курс(ов)
+            </span>
+        </div>
+    </div>
+
+    <!-- Список курсов через Proxy -->
+    <div class="row g-3">
+        <div th:if="${courses.isEmpty()}" class="col-12 text-center py-5 text-muted">
+            <i class="bi bi-collection" style="font-size:3rem;"></i>
+            <p class="mt-2">Proxy не нашёл доступных вам курсов</p>
+            <a href="/courses" class="btn btn-primary">Записаться на курс</a>
+        </div>
+        <div th:each="c : ${courses}" class="col-md-6">
+            <div class="card p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="fw-bold mb-1" th:text="${c.title}"></h6>
+                        <div class="small text-muted" th:text="${c.author} + ' · ' + ${c.durationHours} + ' ч.'"></div>
+                        <span class="badge bg-secondary mt-1 small" th:text="${c.difficultyLevel}"></span>
+                    </div>
+                    <a th:href="@{/courses/{id}(id=${c.id})}" class="btn btn-sm btn-outline-primary ms-2">
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки -->
+    <div class="mt-4 d-flex gap-2">
+        <a href="/courses" class="btn btn-primary">
+            <i class="bi bi-collection me-1"></i>Все курсы
+        </a>
+        <a href="/program" class="btn btn-outline-secondary">
+            <i class="bi bi-diagram-3 me-1"></i>Программа обучения (Composite)
+        </a>
+    </div>
+</div>
+</body>
+</html>

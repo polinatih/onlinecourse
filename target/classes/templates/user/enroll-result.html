@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Результат записи — CoursePlatform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { background:#f4f6fb; }
+        .card { border:none; border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,.1); }
+        .pattern-tag { background:#f0f4ff; color:#3b5bdb; border-radius:20px;
+            padding:3px 12px; font-size:.75rem; font-weight:600; display:inline-block; }
+        .facade-step { border-left:3px solid #667eea; padding:8px 16px; margin-bottom:8px;
+            background:#f8f9ff; border-radius:0 8px 8px 0; font-size:.85rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-mortarboard-fill me-2"></i>CoursePlatform</a>
+        <a th:href="@{/profile/{id}(id=${userId})}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-person me-1"></i>Профиль
+        </a>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+            <!-- Результат -->
+            <div class="card p-4 mb-4">
+                <div class="text-center mb-3">
+                    <div th:if="${result.success}">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size:3rem;"></i>
+                        <h4 class="fw-bold mt-2 text-success">Успешно!</h4>
+                    </div>
+                    <div th:unless="${result.success}">
+                        <i class="bi bi-exclamation-circle-fill text-warning" style="font-size:3rem;"></i>
+                        <h4 class="fw-bold mt-2 text-warning">Внимание</h4>
+                    </div>
+                    <p class="text-muted" th:text="${result.message}"></p>
+                </div>
+
+                <!-- Доступные тесты -->
+                <div th:if="${result.success and !result.availableTests.isEmpty()}">
+                    <h6 class="fw-semibold">Доступные тесты курса:</h6>
+                    <div th:each="t : ${result.availableTests}" class="border rounded p-2 mb-2 d-flex justify-content-between">
+                        <span th:text="${t.title}"></span>
+                        <a th:href="@{/tests/{id}(id=${t.id})}" class="btn btn-sm btn-outline-primary">Пройти</a>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                    <a th:href="@{/profile/{id}(id=${userId})}" class="btn btn-primary">
+                        <i class="bi bi-person me-1"></i>Перейти в профиль
+                    </a>
+                    <a href="/courses" class="btn btn-outline-secondary">
+                        <i class="bi bi-collection me-1"></i>Все курсы
+                    </a>
+                </div>
+            </div>
+
+            <!-- Объяснение Facade -->
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-diagram-3 me-2 text-primary"></i>Как работает Facade</h6>
+                    <span class="pattern-tag">🏛 Facade</span>
+                </div>
+                <p class="text-muted small">
+                    <code>EnrollmentFacade.enrollStudent()</code> скрывает за собой всю цепочку действий:
+                </p>
+                <div class="facade-step">
+                    <strong>Шаг 1:</strong> Загрузить пользователя и курс из репозиториев
+                </div>
+                <div class="facade-step">
+                    <strong>Шаг 2:</strong> Проверить, не записан ли уже студент
+                </div>
+                <div class="facade-step">
+                    <strong>Шаг 3:</strong> Сохранить запись в БД через <code>UserRepository</code>
+                </div>
+                <div class="facade-step">
+                    <strong>Шаг 4:</strong> Синхронизировать с LMS-системами (Adapter — Moodle, Google Classroom)
+                </div>
+                <div class="facade-step">
+                    <strong>Шаг 5:</strong> Вернуть список доступных тестов курса
+                </div>
+                <div class="small text-muted mt-2">
+                    Контроллер вызывает <strong>один метод</strong> фасада — не знает о деталях подсистем.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -29,6 +29,19 @@ public class User {
     @Column(name = "full_name")
     private String fullName;
 
+    @Column(name = "avatar_url")
+private String avatarUrl;
+
+@Column(name = "theme")
+private String theme;
+
+// + геттеры и сеттеры
+public String getAvatarUrl() { return avatarUrl; }
+public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+public String getTheme() { return theme; }
+public void setTheme(String theme) { this.theme = theme; }
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_courses",
@@ -72,4 +85,6 @@ public class User {
 
     public Set<Course> getEnrolledCourses() { return enrolledCourses; }
     public void setEnrolledCourses(Set<Course> enrolledCourses) { this.enrolledCourses = enrolledCourses; }
+
+    
 }

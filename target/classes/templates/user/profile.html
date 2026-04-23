@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Профиль — CoursePlatform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { background:#f4f6fb; }
+        .sidebar { background:white; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+        .main-card { background:white; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+        .pattern-tag { display:inline-block; background:#f0f4ff; color:#3b5bdb;
+            border-radius:20px; padding:3px 12px; font-size:.75rem; font-weight:600; }
+        .badge-pill { background:#e8f4fd; color:#0070c0; border-radius:20px;
+            padding:4px 12px; font-size:.8rem; margin:2px; display:inline-block; }
+        .avatar-circle { width:90px; height:90px; border-radius:50%;
+            background:linear-gradient(135deg,#667eea,#764ba2);
+            display:flex; align-items:center; justify-content:center;
+            font-size:2.2rem; color:white; font-weight:700; margin:0 auto; }
+        .progress { border-radius:10px; height:12px; }
+        .info-box { background:#f8f9fa; border-radius:10px; padding:12px 16px; margin-bottom:10px; }
+        .decorator-chain { background:#fff8e1; border:1px solid #ffd54f;
+            border-radius:10px; padding:14px; font-size:.85rem; font-family:monospace; }
+        .session-dot { width:8px; height:8px; border-radius:50%;
+            background:#28a745; display:inline-block; margin-right:4px; }
+    /* Темы */
+body.theme-dark  { background: #1a1a2e; color: #e0e0e0; }
+body.theme-dark  .sidebar, body.theme-dark  .main-card { background: #16213e; color: #e0e0e0; }
+body.theme-dark  .info-box  { background: #0f3460; }
+body.theme-dark  .text-muted { color: #a0a0b0 !important; }
+body.theme-dark  .decorator-chain { background: #0f3460; border-color: #667eea; }
+
+body.theme-ocean { background: #e0f7fa; }
+body.theme-ocean .sidebar, body.theme-ocean .main-card { background: #ffffff; border-top: 4px solid #00acc1; }
+body.theme-ocean .avatar-circle { background: linear-gradient(135deg, #00acc1, #0077b6); }
+body.theme-ocean .progress-bar  { background: linear-gradient(135deg, #00acc1, #0077b6) !important; }
+    </style>
+</head>
+<body th:class="${user.theme != null and user.theme != 'default'} ? 'theme-' + ${user.theme} : ''"><!-- NAVBAR -->
+<nav class="navbar navbar-dark" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-mortarboard-fill me-2"></i>CoursePlatform</a>
+        <div class="d-flex gap-2">
+            <a href="/courses" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-collection me-1"></i>Курсы
+            </a>
+            <a th:href="@{/my-courses}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-book me-1"></i>Мои курсы
+            </a>
+            <a href="/users" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-people me-1"></i>Пользователи
+            </a>
+            <a href="/logout" class="btn btn-light btn-sm">
+                <i class="bi bi-box-arrow-right me-1"></i>Выйти
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="row g-4">
+
+        <!-- LEFT SIDEBAR — профиль -->
+        <div class="col-lg-4">
+            <div class="sidebar p-4 text-center">
+
+                <!-- Аватар -->
+<!-- Аватар -->
+<div class="mb-3">
+    <img th:if="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}"
+     th:src="${user.avatarUrl}"
+     alt="Аватар"
+     style="width:90px; height:90px; border-radius:50%; object-fit:cover; display:block; margin:0 auto;"
+     onerror="this.style.display='none'; document.getElementById('avatar-fallback').style.display='flex';"/>
+<div id="avatar-fallback"
+     th:style="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)} ? 'display:none;' : ''"
+     class="avatar-circle"
+     th:text="${user.fullName != null ? #strings.substring(user.fullName,0,1) : #strings.substring(user.username,0,1)}">А</div>
+</div>                <h5 class="fw-bold mb-0" th:text="${user.fullName != null ? user.fullName : user.username}"></h5>
+                <p class="text-muted small mb-2" th:text="'@' + ${user.username}"></p>
+
+                <!-- Роль -->
+                <span class="badge mb-3"
+                      th:classappend="${user.role.name() == 'INSTRUCTOR'} ? 'bg-warning text-dark' : 'bg-primary'"
+                      th:text="${user.role.name() == 'INSTRUCTOR'} ? '👨‍🏫 Преподаватель' : '👩‍🎓 Студент'"></span>
+
+                <!-- Прогресс профиля (Decorator) -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="text-muted">Заполненность профиля</span>
+                        <strong th:text="${completeness} + '%'"></strong>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar"
+                             style="background:linear-gradient(135deg,#667eea,#764ba2);"
+                             th:style="'width:' + ${completeness} + '%'"></div>
+                    </div>
+                </div>
+
+                <!-- Бейджи -->
+                <div th:if="${!#arrays.isEmpty(badges)}" class="mb-3">
+                    <div class="text-muted small mb-1">🏅 Достижения</div>
+                    <div th:each="b : ${badges}">
+                        <span class="badge-pill" th:text="${b}"></span>
+                    </div>
+                </div>
+
+                <!-- Сессии (Singleton) -->
+                <div class="info-box text-start">
+                    <div class="small text-muted">🔒 Singleton — UserSessionManager</div>
+                    <div class="fw-semibold">
+                        <span class="session-dot"></span>
+                        Активных сессий: <strong th:text="${activeSessions}"></strong>
+                    </div>
+                </div>
+
+                <!-- Настроить профиль -->
+                <div class="mt-3 text-start">
+                    <div class="small fw-semibold text-muted mb-2">🎨 Настроить профиль (Decorator)</div>
+<form th:action="@{/profile/{id}/settings(id=${user.id})}" method="post">
+    <div class="mb-2">
+        <input type="text" name="avatarUrl" class="form-control form-control-sm"
+               placeholder="URL аватара"
+               th:value="${user.avatarUrl}"/>
+    </div>
+    <div class="mb-2">
+        <select name="theme" class="form-select form-select-sm">
+            <option value="default" th:selected="${user.theme == null or user.theme == 'default'}">☀️ Default</option>
+            <option value="dark"  th:selected="${user.theme == 'dark'}">🌙 Dark</option>
+            <option value="ocean" th:selected="${user.theme == 'ocean'}">🌊 Ocean</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+        Сохранить
+    </button>
+</form>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT — основное содержимое -->
+        <div class="col-lg-8">
+
+            <!-- DECORATOR — результат -->
+            <div class="main-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-layers me-2 text-primary"></i>Профиль пользователя
+                    </h5>
+                    <span class="pattern-tag">🎁 Decorator</span>
+                </div>
+                <div class="decorator-chain">
+                    <div class="text-muted small mb-1">Цепочка декораторов → getDisplayInfo():</div>
+                    <div th:text="${displayInfo}" class="mt-1"></div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-sm-6">
+                        <div class="info-box">
+                            <div class="small text-muted">Email</div>
+                            <div class="fw-semibold" th:text="${user.email}"></div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="info-box">
+                            <div class="small text-muted">Курсов записан</div>
+                            <div class="fw-semibold" th:text="${user.enrolledCourses.size()}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FACADE — записаться на курс -->
+            <div class="main-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-journal-plus me-2 text-success"></i>Запись на курс
+                    </h5>
+                    <span class="pattern-tag">🏛 Facade</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    EnrollmentFacade скрывает работу с репозиториями, LMS-адаптерами и тестами за одним вызовом.
+                </p>
+                <form method="post" action="/enroll">
+                    <input type="hidden" name="userId" th:value="${user.id}"/>
+                    <div class="d-flex gap-2">
+                        <select name="courseId" class="form-select" required>
+                            <option value="">-- выберите курс --</option>
+                            <option th:each="c : ${user.enrolledCourses}" th:value="${c.id}"
+                                    th:text="'✓ ' + ${c.title}" th:disabled="true" style="color:gray;"></option>
+                        </select>
+                        <button type="submit" class="btn btn-success px-4 text-nowrap">
+                            <i class="bi bi-plus me-1"></i>Записаться
+                        </button>
+                    </div>
+                    <div class="small text-muted mt-1">Выберите курс на странице
+                        <a href="/courses">Все курсы</a> и нажмите «Записаться» там.
+                    </div>
+                </form>
+            </div>
+
+            <!-- PROXY — записанные курсы -->
+            <div class="main-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-shield-check me-2 text-warning"></i>Мои курсы (через Proxy)
+                    </h5>
+                    <span class="pattern-tag">🛡 Proxy</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    CourseAccessProxy контролирует доступ: студент видит только свои курсы, преподаватель — все.
+                </p>
+                <div th:if="${user.enrolledCourses.isEmpty()}" class="text-center text-muted py-3">
+                    <i class="bi bi-collection" style="font-size:2rem;"></i>
+                    <p class="mt-2 small">Вы ещё не записаны ни на один курс</p>
+                    <a href="/courses" class="btn btn-outline-primary btn-sm">Перейти к курсам</a>
+                </div>
+                <div th:each="c : ${user.enrolledCourses}" class="border rounded p-3 mb-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-semibold" th:text="${c.title}"></div>
+                        <div class="small text-muted" th:text="${c.author} + ' · ' + ${c.durationHours} + ' ч.'"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/courses/{id}(id=${c.id})}" class="btn btn-sm btn-outline-primary">Открыть</a>
+                        <form method="post" action="/unenroll" class="d-inline">
+                            <input type="hidden" name="userId" th:value="${user.id}"/>
+                            <input type="hidden" name="courseId" th:value="${c.id}"/>
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Отписаться</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

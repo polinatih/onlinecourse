@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Программа обучения — CoursePlatform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { background:#f4f6fb; }
+        .card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+        .pattern-tag { background:#f0f4ff; color:#3b5bdb; border-radius:20px;
+            padding:3px 12px; font-size:.75rem; font-weight:600; }
+        .tree-root { border-left:4px solid #667eea; padding-left:16px; }
+        .tree-section { border-left:3px solid #a0b0f0; padding-left:14px; margin:10px 0; }
+        .tree-leaf { border-left:2px solid #d0d8f8; padding-left:12px; margin:6px 0;
+            font-size:.88rem; }
+        .stat-box { background:white; border-radius:12px; padding:16px; text-align:center;
+            box-shadow:0 2px 8px rgba(0,0,0,.07); }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-mortarboard-fill me-2"></i>CoursePlatform</a>
+        <div class="d-flex gap-2">
+            <a href="/courses" class="btn btn-outline-light btn-sm">Курсы</a>
+            <a href="/users" class="btn btn-outline-light btn-sm">Пользователи</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">
+                <i class="bi bi-diagram-3 me-2 text-primary"></i>Программа обучения
+            </h3>
+            <p class="text-muted small mb-0">Иерархическая структура через паттерн Composite</p>
+        </div>
+        <span class="pattern-tag">🌳 Composite</span>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row g-3 mb-4">
+        <div class="col-4">
+            <div class="stat-box">
+                <div class="display-6 fw-bold text-primary" th:text="${program.getCourseCount()}">0</div>
+                <div class="small text-muted">Курсов всего</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-box">
+                <div class="display-6 fw-bold text-success" th:text="${program.getTotalDurationHours()} + ' ч'">0 ч</div>
+                <div class="small text-muted">Суммарно часов</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-box">
+                <div class="display-6 fw-bold text-warning" th:text="${allCourses.size()}">0</div>
+                <div class="small text-muted">Курсов в базе</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Дерево Composite -->
+    <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3">
+            <i class="bi bi-diagram-2 me-2 text-primary"></i>Дерево учебной программы
+        </h5>
+        <div class="tree-root">
+            <div class="fw-bold" th:text="'📦 LearningProgram: ' + ${program.name}"></div>
+            <div class="small text-muted mb-2" th:text="${program.description}"></div>
+            <div class="small">
+                Итого: <strong th:text="${program.getCourseCount()} + ' курс(ов)'"></strong>,
+                <strong th:text="${program.getTotalDurationHours()} + ' ч.'"></strong>
+            </div>
+
+            <div class="tree-section mt-3">
+                <div class="fw-semibold text-primary">📁 CurriculumSection: Для начинающих</div>
+                <div th:each="c : ${allCourses}" th:if="${c.difficultyLevel != null and c.difficultyLevel.name() == 'BEGINNER'}">
+                    <div class="tree-leaf">
+                        <i class="bi bi-file-earmark-text text-muted me-1"></i>
+                        <span th:text="${c.title}"></span>
+                        <span class="text-muted" th:text="'(' + ${c.durationHours} + ' ч.)'"></span>
+                    </div>
+                </div>
+                <div th:if="${allCourses.stream().filter(c -> c.getDifficultyLevel() != null and c.getDifficultyLevel().name() == 'BEGINNER').count() == 0}"
+                     class="tree-leaf text-muted small">— нет курсов этого уровня —</div>
+            </div>
+
+            <div class="tree-section">
+                <div class="fw-semibold text-success">📁 CurriculumSection: Продвинутый уровень</div>
+                <div th:each="c : ${allCourses}" th:if="${c.difficultyLevel != null and c.difficultyLevel.name() != 'BEGINNER'}">
+                    <div class="tree-leaf">
+                        <i class="bi bi-file-earmark-text text-muted me-1"></i>
+                        <span th:text="${c.title}"></span>
+                        <span class="text-muted" th:text="'(' + ${c.durationHours} + ' ч.)'"></span>
+                    </div>
+                </div>
+                <div th:if="${allCourses.stream().filter(c -> c.getDifficultyLevel() != null and c.getDifficultyLevel().name() != 'BEGINNER').count() == 0}"
+                     class="tree-leaf text-muted small">— нет курсов этого уровня —</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Объяснение паттерна -->
+    <div class="card p-4">
+        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-2 text-primary"></i>Как работает Composite</h6>
+        <p class="small text-muted mb-2">
+            Все компоненты реализуют интерфейс <code>CurriculumComponent</code> с методами
+            <code>getCourseCount()</code>, <code>getTotalDurationHours()</code>, <code>display()</code>.
+            Клиентский код вызывает эти методы одинаково на любом уровне дерева.
+        </p>
+        <div class="row g-2 small">
+            <div class="col-4 text-center p-2 bg-light rounded">
+                <div class="fw-semibold">🌳 LearningProgram</div>
+                <div class="text-muted">корень</div>
+            </div>
+            <div class="col-4 text-center p-2 bg-light rounded">
+                <div class="fw-semibold">📁 CurriculumSection</div>
+                <div class="text-muted">контейнер</div>
+            </div>
+            <div class="col-4 text-center p-2 bg-light rounded">
+                <div class="fw-semibold">📄 CourseLeaf</div>
+                <div class="text-muted">лист</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <a href="/courses" class="btn btn-primary">
+            <i class="bi bi-collection me-1"></i>Все курсы
+        </a>
+        <a href="/" class="btn btn-outline-secondary">На главную</a>
+    </div>
+</div>
+</body>
+</html>
