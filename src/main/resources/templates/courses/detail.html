@@ -4,7 +4,15 @@
     <meta charset="UTF-8"/><title th:text="${course.title}">Курс</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
-    <style>body{background:#f8f9fa;}</style>
+    <style>
+        body { background:#f8f9fa; }
+        .pattern-block { border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        .pattern-tag { border-radius:20px; padding:3px 12px; font-size:.75rem; font-weight:600; display:inline-block; }
+        .step-item { border-left:3px solid #667eea; padding:6px 14px; margin-bottom:6px;
+                     background:#f8f9ff; border-radius:0 8px 8px 0; font-size:.85rem; }
+        .event-item { font-size:.8rem; padding:4px 10px; background:#f0fff4;
+                      border-radius:6px; margin-bottom:4px; }
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-dark bg-primary mb-4">
@@ -13,10 +21,15 @@
         <a class="nav-link text-white" href="/courses">← Все курсы</a>
     </div>
 </nav>
+
 <div class="container">
     <div class="row g-4">
+
+        <!-- Левая колонка -->
         <div class="col-lg-8">
-            <div class="card p-4 mb-4" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+
+            <!-- Основная карточка курса -->
+            <div class="card pattern-block p-4 mb-4">
                 <div class="d-flex gap-2 mb-2">
                     <span class="badge bg-primary" th:text="${course.getCourseType()}"></span>
                     <span class="badge bg-secondary" th:text="${course.difficultyLevel}"></span>
@@ -45,8 +58,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ПАТТЕРН TEMPLATE METHOD -->
+            <div class="card pattern-block p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i th:class="'bi ' + ${lessonIcon} + ' me-2 text-primary'"></i>
+                        Как проходит урок
+                    </h5>
+                    <span class="pattern-tag" style="background:#fff3cd;color:#856404;">📐 Template Method</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    Тип урока: <strong th:text="${lessonType}"></strong> —
+                    шаблон определяет порядок шагов, подкласс реализует каждый шаг по-своему.
+                </p>
+                <div th:each="step : ${lessonSteps}" class="step-item" th:text="${step}"></div>
+            </div>
+
             <!-- Тесты -->
-            <div class="card p-4" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+            <div class="card pattern-block p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0">
                         <i class="bi bi-clipboard-check me-2 text-primary"></i>Тесты
@@ -75,43 +105,105 @@
                 </div>
             </div>
         </div>
+
+        <!-- Правая колонка -->
         <div class="col-lg-4">
-            <div class="card p-3 text-center" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
+
+            <!-- Счётчик тестов -->
+            <div class="card pattern-block p-3 text-center mb-3">
                 <div class="display-6 text-primary fw-bold" th:text="${#lists.size(course.tests)}">0</div>
                 <div class="text-muted small">Тестов</div>
             </div>
-            <!-- FACADE: Записаться на курс -->
-            <div class="card p-3 mt-3" style="border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px;">
-    <div class="text-center mb-2">
-        <span class="badge bg-success">🏛 Facade — Запись на курс</span>
-    </div>
 
-    <!-- Если залогинен — кнопка записи -->
-    <div th:if="${currentUserId != null}">
-        <form method="post" action="/enroll">
-            <input type="hidden" name="courseId" th:value="${course.id}"/>
-            <input type="hidden" name="userId"   th:value="${currentUserId}"/>
-            <button type="submit" class="btn btn-success w-100">
-                <i class="bi bi-journal-plus me-1"></i>Записаться на курс
-            </button>
-        </form>
-        <div class="text-center mt-2">
-            <a th:href="@{/profile/{id}(id=${currentUserId})}" class="small text-muted">
-                Перейти в профиль →
-            </a>
-        </div>
-    </div>
+            <!-- ПАТТЕРН STRATEGY: цена со скидкой -->
+            <div class="card pattern-block p-3 mb-3">
+                <div class="text-center mb-2">
+                    <span class="pattern-tag" th:classappend="'bg-' + ${price.badgeColor}" style="color:white;">
+                        🎯 Strategy — Цена курса
+                    </span>
+                </div>
+                <div class="text-center my-2">
+                    <div th:if="${price.hasDiscount()}">
+                        <span class="text-muted text-decoration-line-through small"
+                              th:text="${price.originalPrice} + ' ₽'"></span>
+                        <div class="fs-4 fw-bold text-success" th:text="${price.finalPrice} + ' ₽'"></div>
+                    </div>
+                    <div th:unless="${price.hasDiscount()}">
+                        <div class="fs-4 fw-bold" th:text="${price.originalPrice} + ' ₽'"></div>
+                    </div>
+                    <span class="badge mt-1"
+                          th:classappend="'bg-' + ${price.badgeColor}"
+                          th:text="${price.discountDescription}"></span>
+                </div>
+                <div class="small text-muted text-center mt-1">
+                    Стратегия выбирается автоматически по роли и активности студента
+                </div>
+            </div>
 
-    <!-- Если не залогинен — предложить войти -->
-    <div th:unless="${currentUserId != null}">
-        <p class="small text-muted text-center mb-2">
-            Войдите чтобы записаться на курс
-        </p>
-        <a href="/login" class="btn btn-outline-secondary w-100">
-            <i class="bi bi-box-arrow-in-right me-1"></i>Войти
-        </a>
-    </div>
-</div>
+            <!-- ПАТТЕРН FACADE: Записаться на курс -->
+            <div class="card pattern-block p-3 mb-3">
+                <div class="text-center mb-2">
+                    <span class="badge bg-success">🏛 Facade — Запись на курс</span>
+                </div>
+                <div th:if="${currentUserId != null}">
+                    <form method="post" action="/enroll">
+                        <input type="hidden" name="courseId" th:value="${course.id}"/>
+                        <input type="hidden" name="userId"   th:value="${currentUserId}"/>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-journal-plus me-1"></i>Записаться на курс
+                        </button>
+                    </form>
+                    <div class="text-center mt-2">
+                        <a th:href="@{/profile/{id}(id=${currentUserId})}" class="small text-muted">
+                            Перейти в профиль →
+                        </a>
+                    </div>
+                </div>
+                <div th:unless="${currentUserId != null}">
+                    <p class="small text-muted text-center mb-2">Войдите чтобы записаться на курс</p>
+                    <a href="/login" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Войти
+                    </a>
+                </div>
+            </div>
+
+            <!-- ПАТТЕРН OBSERVER: подписка на обновления -->
+            <div class="card pattern-block p-3">
+                <div class="text-center mb-2">
+                    <span class="pattern-tag" style="background:#e8f5e9;color:#2e7d32;">👁 Observer — Обновления</span>
+                </div>
+                <div class="text-center small text-muted mb-2">
+                    Подписчиков: <strong th:text="${subscriberCount}">0</strong>
+                </div>
+
+                <div th:if="${currentUserId != null}">
+                    <!-- Кнопка подписки/отписки -->
+                    <div th:if="${!isSubscribed}">
+                        <form th:action="@{/courses/{id}/subscribe(id=${course.id})}" method="post">
+                            <button type="submit" class="btn btn-outline-success w-100 btn-sm">
+                                <i class="bi bi-bell me-1"></i>Подписаться на обновления
+                            </button>
+                        </form>
+                    </div>
+                    <div th:unless="${!isSubscribed}">
+                        <form th:action="@{/courses/{id}/unsubscribe(id=${course.id})}" method="post">
+                            <button type="submit" class="btn btn-outline-secondary w-100 btn-sm">
+                                <i class="bi bi-bell-slash me-1"></i>Отписаться
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div th:unless="${currentUserId != null}" class="text-center">
+                    <a href="/login" class="btn btn-outline-secondary btn-sm w-100">Войти для подписки</a>
+                </div>
+
+                <!-- Лог событий -->
+                <div th:if="${!#lists.isEmpty(eventLog)}" class="mt-3">
+                    <div class="small fw-semibold text-muted mb-1">Последние события:</div>
+                    <div th:each="entry : ${eventLog}" class="event-item" th:text="${entry}"></div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

@@ -12,6 +12,10 @@
             padding:3px 12px; font-size:.75rem; font-weight:600; display:inline-block; }
         .facade-step { border-left:3px solid #667eea; padding:8px 16px; margin-bottom:8px;
             background:#f8f9ff; border-radius:0 8px 8px 0; font-size:.85rem; }
+        .chain-step-ok  { border-left:3px solid #28a745; padding:8px 16px; margin-bottom:8px;
+            background:#f0fff4; border-radius:0 8px 8px 0; font-size:.85rem; }
+        .chain-step-fail { border-left:3px solid #dc3545; padding:8px 16px; margin-bottom:8px;
+            background:#fff5f5; border-radius:0 8px 8px 0; font-size:.85rem; }
     </style>
 </head>
 <body>
@@ -28,7 +32,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-7">
 
-            <!-- Результат -->
+            <!-- Результат записи -->
             <div class="card p-4 mb-4">
                 <div class="text-center mb-3">
                     <div th:if="${result.success}">
@@ -42,7 +46,6 @@
                     <p class="text-muted" th:text="${result.message}"></p>
                 </div>
 
-                <!-- Доступные тесты -->
                 <div th:if="${result.success and !result.availableTests.isEmpty()}">
                     <h6 class="fw-semibold">Доступные тесты курса:</h6>
                     <div th:each="t : ${result.availableTests}" class="border rounded p-2 mb-2 d-flex justify-content-between">
@@ -61,7 +64,34 @@
                 </div>
             </div>
 
-            <!-- Объяснение Facade -->
+            <!-- ПАТТЕРН CHAIN OF RESPONSIBILITY -->
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-link-45deg me-2 text-danger"></i>Цепочка проверок при записи
+                    </h6>
+                    <span class="pattern-tag" style="background:#fff0f0;color:#c0392b;">⛓ Chain of Responsibility</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    Запрос на запись проходит через цепочку обработчиков.
+                    Каждый обработчик либо пропускает запрос дальше, либо отклоняет его.
+                </p>
+
+                <!-- Пройденные шаги -->
+                <div th:each="step : ${chainResult.passedSteps}" class="chain-step-ok" th:text="${step}"></div>
+
+                <!-- Итог цепочки -->
+                <div th:if="${chainResult.allowed}" class="chain-step-ok fw-semibold"
+                     th:text="${chainResult.message}"></div>
+                <div th:unless="${chainResult.allowed}" class="chain-step-fail fw-semibold"
+                     th:text="${chainResult.message}"></div>
+
+                <div class="small text-muted mt-2">
+                    Цепочка: <code>AgeCheckHandler → PaymentCheckHandler → PrerequisiteCheckHandler</code>
+                </div>
+            </div>
+
+            <!-- ПАТТЕРН FACADE (объяснение) -->
             <div class="card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-diagram-3 me-2 text-primary"></i>Как работает Facade</h6>
@@ -70,21 +100,11 @@
                 <p class="text-muted small">
                     <code>EnrollmentFacade.enrollStudent()</code> скрывает за собой всю цепочку действий:
                 </p>
-                <div class="facade-step">
-                    <strong>Шаг 1:</strong> Загрузить пользователя и курс из репозиториев
-                </div>
-                <div class="facade-step">
-                    <strong>Шаг 2:</strong> Проверить, не записан ли уже студент
-                </div>
-                <div class="facade-step">
-                    <strong>Шаг 3:</strong> Сохранить запись в БД через <code>UserRepository</code>
-                </div>
-                <div class="facade-step">
-                    <strong>Шаг 4:</strong> Синхронизировать с LMS-системами (Adapter — Moodle, Google Classroom)
-                </div>
-                <div class="facade-step">
-                    <strong>Шаг 5:</strong> Вернуть список доступных тестов курса
-                </div>
+                <div class="facade-step"><strong>Шаг 1:</strong> Загрузить пользователя и курс из репозиториев</div>
+                <div class="facade-step"><strong>Шаг 2:</strong> Проверить, не записан ли уже студент</div>
+                <div class="facade-step"><strong>Шаг 3:</strong> Сохранить запись в БД через <code>UserRepository</code></div>
+                <div class="facade-step"><strong>Шаг 4:</strong> Синхронизировать с LMS-системами (Adapter)</div>
+                <div class="facade-step"><strong>Шаг 5:</strong> Вернуть список доступных тестов курса</div>
                 <div class="small text-muted mt-2">
                     Контроллер вызывает <strong>один метод</strong> фасада — не знает о деталях подсистем.
                 </div>

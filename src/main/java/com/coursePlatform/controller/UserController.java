@@ -3,6 +3,11 @@ package com.coursePlatform.controller;
 import com.coursePlatform.model.course.Course;
 import com.coursePlatform.model.user.User;
 import com.coursePlatform.model.user.UserRole;
+import com.coursePlatform.patterns.behavioral.chain.CheckResult;
+import com.coursePlatform.patterns.behavioral.chain.EnrollmentChainService;
+import com.coursePlatform.patterns.behavioral.command.CommandHistoryService;
+import com.coursePlatform.patterns.behavioral.command.EnrollCommand;
+import com.coursePlatform.patterns.behavioral.command.EnrollmentService;
 import com.coursePlatform.patterns.singleton.UserSessionManager;
 import com.coursePlatform.patterns.structural.composite.CurriculumBuilder;
 import com.coursePlatform.patterns.structural.composite.LearningProgram;
@@ -21,39 +26,40 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Контроллер пользователей.
- * Подключает структурные паттерны к веб-слою:
- *  - Decorator  → GET /profile/{id}
- *  - Facade     → POST /enroll
- *  - Proxy      → GET /my-courses
- *  - Composite  → GET /program
- */
 @Controller
 public class UserController {
 
-    private static final String SESSION_USER_ID  = "userId";
-    private static final String SESSION_ID_ATTR  = "sessionId";
+    private static final String SESSION_USER_ID = "userId";
+    private static final String SESSION_ID_ATTR = "sessionId";
 
-    private final UserRepository       userRepository;
-    private final UserProfileFactory   profileFactory;
-    private final EnrollmentFacade     enrollmentFacade;
-    private final CourseAccessProxy    courseProxy;
-    private final CourseRepository     courseRepository;
-    private final CurriculumBuilder    curriculumBuilder;
+    private final UserRepository         userRepository;
+    private final UserProfileFactory     profileFactory;
+    private final EnrollmentFacade       enrollmentFacade;
+    private final CourseAccessProxy      courseProxy;
+    private final CourseRepository       courseRepository;
+    private final CurriculumBuilder      curriculumBuilder;
+    private final CommandHistoryService  commandHistoryService;
+    private final EnrollmentChainService enrollmentChainService;
+    private final EnrollmentService      enrollmentService;
 
     public UserController(UserRepository userRepository,
                           UserProfileFactory profileFactory,
                           EnrollmentFacade enrollmentFacade,
                           CourseAccessProxy courseProxy,
                           CourseRepository courseRepository,
-                          CurriculumBuilder curriculumBuilder) {
-        this.userRepository    = userRepository;
-        this.profileFactory    = profileFactory;
-        this.enrollmentFacade  = enrollmentFacade;
-        this.courseProxy       = courseProxy;
-        this.courseRepository  = courseRepository;
-        this.curriculumBuilder = curriculumBuilder;
+                          CurriculumBuilder curriculumBuilder,
+                          CommandHistoryService commandHistoryService,
+                          EnrollmentChainService enrollmentChainService,
+                          EnrollmentService enrollmentService) {
+        this.userRepository         = userRepository;
+        this.profileFactory         = profileFactory;
+        this.enrollmentFacade       = enrollmentFacade;
+        this.courseProxy            = courseProxy;
+        this.courseRepository       = courseRepository;
+        this.curriculumBuilder      = curriculumBuilder;
+        this.commandHistoryService  = commandHistoryService;
+        this.enrollmentChainService = enrollmentChainService;
+        this.enrollmentService      = enrollmentService;
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -74,7 +80,6 @@ public class UserController {
         return userRepository.findByUsername(username)
                 .filter(u -> u.getPassword().equals(password))
                 .map(user -> {
-                    // Singleton — открываем сессию
                     String sid = UUID.randomUUID().toString();
                     UserSessionManager.getInstance().openSession(sid, user);
                     httpSession.setAttribute(SESSION_USER_ID, user.getId());
@@ -92,9 +97,7 @@ public class UserController {
     // ─────────────────────────────────────────────────────────────
 
     @GetMapping("/register")
-    public String showRegister() {
-        return "auth/register";
-    }
+    public String showRegister() { return "auth/register"; }
 
     @PostMapping("/register")
     public String doRegister(@RequestParam String username,
@@ -126,7 +129,7 @@ public class UserController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  PROFILE  (DECORATOR паттерн)
+    //  PROFILE  (DECORATOR)
     // ─────────────────────────────────────────────────────────────
 
     @GetMapping("/profile/{id}")
@@ -135,21 +138,10 @@ public class UserController {
                               @RequestParam(required = false) String theme,
                               HttpSession httpSession,
                               Model model) {
-
-        User user = userRepository.findById(id)
-                .orElseThrow();
-
-        // Собираем бейджи на основе количества записанных курсов
+        User user = userRepository.findById(id).orElseThrow();
         String[] badges = buildBadges(user);
-
-        // ПАТТЕРН DECORATOR: собираем профиль через фабрику декораторов
         UserProfile profile = profileFactory.buildProfile(
-        user,
-        user.getAvatarUrl(),   // ← из БД
-        user.getTheme(),       // ← из БД
-        buildBadges(user)
-    );
-        // Активные сессии через Singleton
+                user, user.getAvatarUrl(), user.getTheme(), badges);
         int activeSessions = UserSessionManager.getInstance().getActiveSessionCount();
 
         model.addAttribute("user",           user);
@@ -161,31 +153,44 @@ public class UserController {
         model.addAttribute("displayInfo",    profile.getDisplayInfo());
         model.addAttribute("avatarParam",    avatar);
         model.addAttribute("themeParam",     theme);
-
         return "user/profile";
     }
 
     private String[] buildBadges(User user) {
         int enrolled = user.getEnrolledCourses().size();
-        if (enrolled >= 5)  return new String[]{"Опытный студент", "Активный участник", "Первый курс"};
-        if (enrolled >= 2)  return new String[]{"Активный участник", "Первый курс"};
-        if (enrolled >= 1)  return new String[]{"Первый курс"};
+        if (enrolled >= 5) return new String[]{"Опытный студент", "Активный участник", "Первый курс"};
+        if (enrolled >= 2) return new String[]{"Активный участник", "Первый курс"};
+        if (enrolled >= 1) return new String[]{"Первый курс"};
         return new String[]{};
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  ENROLL  (FACADE паттерн)
+    //  ENROLL  (FACADE + CHAIN OF RESPONSIBILITY + COMMAND)
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/enroll")
     public String enroll(@RequestParam Long userId,
                          @RequestParam Long courseId,
                          Model model) {
-        // ПАТТЕРН FACADE: одна точка входа скрывает всю логику записи
-        EnrollmentFacade.EnrollmentResult result = enrollmentFacade.enrollStudent(userId, courseId);
-        model.addAttribute("result",    result);
-        model.addAttribute("userId",    userId);
-        model.addAttribute("courseId",  courseId);
+        User user = userRepository.findById(userId).orElseThrow();
+
+        // ПАТТЕРН CHAIN OF RESPONSIBILITY
+        CheckResult chainResult = enrollmentChainService.check(user);
+
+        // ПАТТЕРН FACADE
+        EnrollmentFacade.EnrollmentResult facadeResult = enrollmentFacade.enrollStudent(userId, courseId);
+
+        // ПАТТЕРН COMMAND
+        if (facadeResult.isSuccess()) {
+            Course course = courseRepository.findById(courseId).orElseThrow();
+            EnrollCommand command = new EnrollCommand(user.getUsername(), course.getTitle(), enrollmentService);
+            commandHistoryService.execute(userId, command);
+        }
+
+        model.addAttribute("result",      facadeResult);
+        model.addAttribute("chainResult", chainResult);
+        model.addAttribute("userId",      userId);
+        model.addAttribute("courseId",    courseId);
         return "user/enroll-result";
     }
 
@@ -197,7 +202,7 @@ public class UserController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  MY COURSES  (PROXY паттерн)
+    //  MY COURSES  (PROXY + COMMAND)
     // ─────────────────────────────────────────────────────────────
 
     @GetMapping("/my-courses")
@@ -208,25 +213,37 @@ public class UserController {
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
-        // ПАТТЕРН PROXY: фильтрует курсы по роли пользователя
-        List<Course> courses = courseProxy.getAllCourses(user);
+        List<Course> courses    = courseProxy.getAllCourses(user);
         List<Course> allCourses = courseRepository.findAll();
+
+        List<String> commandLog = commandHistoryService.getLog(uid);
+        boolean hasHistory      = commandHistoryService.hasHistory(uid);
 
         model.addAttribute("user",       user);
         model.addAttribute("courses",    courses);
         model.addAttribute("allCourses", allCourses);
+        model.addAttribute("commandLog", commandLog);
+        model.addAttribute("hasHistory", hasHistory);
         return "user/my-courses";
     }
 
+    @PostMapping("/undo")
+    public String undoLastCommand(HttpSession httpSession, RedirectAttributes ra) {
+        Long uid = (Long) httpSession.getAttribute(SESSION_USER_ID);
+        if (uid != null) {
+            String msg = commandHistoryService.undoLast(uid);
+            ra.addFlashAttribute("undoMessage", msg);
+        }
+        return "redirect:/my-courses";
+    }
+
     // ─────────────────────────────────────────────────────────────
-    //  LEARNING PROGRAM  (COMPOSITE паттерн)
+    //  LEARNING PROGRAM  (COMPOSITE)
     // ─────────────────────────────────────────────────────────────
 
     @GetMapping("/program")
     public String learningProgram(Model model) {
         List<Course> all = courseRepository.findAll();
-
-        // Разделяем на начинающих и продвинутых (по DifficultyLevel)
         List<Course> beginner = all.stream()
                 .filter(c -> c.getDifficultyLevel() != null &&
                         c.getDifficultyLevel().name().equals("BEGINNER"))
@@ -236,7 +253,6 @@ public class UserController {
                         !c.getDifficultyLevel().name().equals("BEGINNER"))
                 .toList();
 
-        // ПАТТЕРН COMPOSITE: строим иерархическое дерево программы
         LearningProgram program = curriculumBuilder.buildProgram(
                 "Полная программа обучения",
                 "Комплексный курс от начального до продвинутого уровня",
@@ -244,13 +260,13 @@ public class UserController {
                 advanced.isEmpty() ? all.subList(Math.min(2, all.size()), all.size()) : advanced
         );
 
-        model.addAttribute("program",   program);
+        model.addAttribute("program",    program);
         model.addAttribute("allCourses", all);
         return "user/program";
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  USERS LIST  (admin view)
+    //  USERS LIST
     // ─────────────────────────────────────────────────────────────
 
     @GetMapping("/users")
@@ -261,14 +277,13 @@ public class UserController {
     }
 
     @PostMapping("/profile/{id}/settings")
-public String saveSettings(@PathVariable Long id,
-                           @RequestParam(required = false) String avatarUrl,
-                           @RequestParam(required = false) String theme) {
-    User user = userRepository.findById(id).orElseThrow();
-    if (avatarUrl != null) user.setAvatarUrl(avatarUrl);
-    if (theme != null)     user.setTheme(theme);
-    userRepository.save(user);
-    return "redirect:/profile/" + id;
-}
-
+    public String saveSettings(@PathVariable Long id,
+                               @RequestParam(required = false) String avatarUrl,
+                               @RequestParam(required = false) String theme) {
+        User user = userRepository.findById(id).orElseThrow();
+        if (avatarUrl != null) user.setAvatarUrl(avatarUrl);
+        if (theme != null)     user.setTheme(theme);
+        userRepository.save(user);
+        return "redirect:/profile/" + id;
+    }
 }

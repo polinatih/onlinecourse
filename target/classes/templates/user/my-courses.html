@@ -11,6 +11,9 @@
         .pattern-tag { background:#f0f4ff; color:#3b5bdb; border-radius:20px;
             padding:3px 12px; font-size:.75rem; font-weight:600; }
         .proxy-info { background:#fff3cd; border:1px solid #ffd54f; border-radius:10px; padding:12px 16px; font-size:.85rem; }
+        .command-info { background:#f0f4ff; border:1px solid #a5b4fc; border-radius:10px; padding:12px 16px; font-size:.85rem; }
+        .log-item { font-size:.8rem; padding:5px 10px; background:#f8faff;
+                    border-radius:6px; margin-bottom:4px; border-left:3px solid #667eea; }
     </style>
 </head>
 <body>
@@ -53,6 +56,38 @@
         </div>
     </div>
 
+    <!-- ПАТТЕРН COMMAND: история действий + кнопка Undo -->
+    <div class="command-info mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong><i class="bi bi-arrow-counterclockwise me-1"></i>Command — История действий</strong>
+            <span class="pattern-tag">⌨️ Command</span>
+        </div>
+        <p class="small text-muted mb-2">
+            Каждая запись на курс сохраняется как команда. Можно отменить последнее действие (Undo).
+        </p>
+
+        <!-- Уведомление об отмене -->
+        <div th:if="${undoMessage}" class="alert alert-warning py-2 small mb-2" th:text="${undoMessage}"></div>
+
+        <!-- Лог команд -->
+        <div th:if="${!#lists.isEmpty(commandLog)}">
+            <div class="small fw-semibold text-muted mb-1">Лог команд:</div>
+            <div th:each="entry : ${commandLog}" class="log-item" th:text="${entry}"></div>
+        </div>
+        <div th:unless="${!#lists.isEmpty(commandLog)}" class="small text-muted">
+            История пуста — запишитесь на курс, чтобы появилось первое действие.
+        </div>
+
+        <!-- Кнопка Undo -->
+        <div th:if="${hasHistory}" class="mt-2">
+            <form action="/undo" method="post">
+                <button type="submit" class="btn btn-warning btn-sm">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Отменить последнее действие
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Список курсов через Proxy -->
     <div class="row g-3">
         <div th:if="${courses.isEmpty()}" class="col-12 text-center py-5 text-muted">
@@ -76,7 +111,6 @@
         </div>
     </div>
 
-    <!-- Кнопки -->
     <div class="mt-4 d-flex gap-2">
         <a href="/courses" class="btn btn-primary">
             <i class="bi bi-collection me-1"></i>Все курсы
